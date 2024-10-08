@@ -14,16 +14,13 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 object RecipeDbo: IntIdTable("recipe"){
 
-    val createdAt = date(KEY.createdAt).nullable()
-    val updatedAt = date(KEY.updatedAt).nullable()
-    val title = varchar(KEY.title, 255)
-    val descr = varchar(KEY.description, 255).nullable()
-    val image = varchar(KEY.image, 255)
-    val video = varchar(KEY.video, 255).nullable()
+    val title = text(KEY.title,)
+    val descr = text(KEY.description).nullable()
+    val image = text(KEY.image)
+    val video = text(KEY.video).nullable()
     val calories = integer(KEY.calories).nullable()
     val cookingTime = integer(KEY.cookingTime).nullable()
-    val difficulty = varchar(KEY.difficulty, 64).nullable()
-    val userId = varchar(KEY.userId, 255).nullable()
+    val difficulty = text(KEY.difficulty).nullable()
     val protein = integer(KEY.protein)
     val fat = integer(KEY.fat)
     val carbs = integer(KEY.carbs)
@@ -34,8 +31,6 @@ object RecipeDbo: IntIdTable("recipe"){
 
     fun insert(recipe: Recipe) = transaction{
         RecipeDbo.insert {
-            it[createdAt] = recipe.createdAt
-            it[updatedAt] = recipe.updatedAt
             it[title] = recipe.title
             it[descr] = recipe.descr
             it[image] = recipe.image
@@ -43,7 +38,6 @@ object RecipeDbo: IntIdTable("recipe"){
             it[calories] = recipe.calories
             it[cookingTime] = recipe.cookingTime
             it[difficulty] = recipe.difficulty.toString()
-            it[userId] = recipe.userId
             it[protein] = recipe.protein
             it[fat] = recipe.fat
             it[carbs] = recipe.carbs
@@ -56,9 +50,6 @@ object RecipeDbo: IntIdTable("recipe"){
     fun selectRecipes() = transaction { selectAll().map { it.toRecipe() } }
 
     private fun ResultRow.toRecipe() = Recipe(
-        id = this[id].value,
-        createdAt = this[createdAt],
-        updatedAt = this[updatedAt],
         title = this[title],
         descr = this[descr],
         image = this[image],
@@ -66,7 +57,6 @@ object RecipeDbo: IntIdTable("recipe"){
         calories = this[calories],
         cookingTime = this[cookingTime],
         difficulty = this[difficulty].toDifficulty(),
-        userId = this[userId],
         protein = this[protein],
         fat = this[fat],
         carbs = this[carbs],
@@ -79,9 +69,6 @@ object RecipeDbo: IntIdTable("recipe"){
 
 @Serializable
 data class Recipe(
-    val id: Int,
-    val createdAt: LocalDate?,
-    val updatedAt: LocalDate?,
     val title: String,
     val descr: String?,
     val image: String,
@@ -89,7 +76,6 @@ data class Recipe(
     val calories: Int?,
     val cookingTime: Int?,
     val difficulty: Difficulty?,
-    val userId: String?,
     val protein: Int,
     val fat: Int,
     val carbs: Int,
@@ -99,8 +85,6 @@ data class Recipe(
 )
 
 private object KEY{
-    const val createdAt = "key_createdAt"
-    const val updatedAt = "key_updatedAt"
     const val title = "key_title"
     const val description = "key_description"
     const val image = "key_image"
@@ -108,7 +92,6 @@ private object KEY{
     const val calories = "key_calories"
     const val cookingTime = "key_cookingTime"
     const val difficulty = "key_difficulty"
-    const val userId = "key_userId"
     const val protein = "key_protein"
     const val fat = "key_fat"
     const val carbs = "key_carbs"

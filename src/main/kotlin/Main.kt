@@ -20,11 +20,13 @@ fun main(): Unit = runBlocking {
     RecipeScanner().use {
         load()
     }
+    println(RecipeDbo.selectRecipes().size)
 }
 
 private fun initialDatabase() {
     Database.connect("jdbc:h2:./adminBot", driver = "org.h2.Driver", user = "root", password = "")
     transaction {
+        SchemaUtils.drop(RecipeDbo)
         SchemaUtils.create(RecipeDbo, RecipeLinkDbo)
     }
 }

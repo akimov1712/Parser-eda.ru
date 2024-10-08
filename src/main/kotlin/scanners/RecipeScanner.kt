@@ -1,6 +1,8 @@
 package org.example.scanners
 
 import kotlinx.coroutines.*
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import model.Difficulty
 import model.Recipe
 import model.RecipeDbo
@@ -10,7 +12,6 @@ import org.example.utills.Log
 import org.example.utills.formatCookingTime
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import kotlin.random.Random
 
 class RecipeScanner(
     private val linkScanner: RecipeLinkScanner = Dependency.RecipeLinkScanner
@@ -30,17 +31,13 @@ class RecipeScanner(
             async(SupervisorJob()) {
                 val doc = Jsoup.connect(link.link).get()
                 Recipe(
-                    id = 0,
-                    createdAt = null,
-                    updatedAt = null,
                     title = doc.getTitle(),
-                    descr = null,
+                    descr = doc.getDescr(),
                     image = doc.getImage(),
                     video = null,
                     calories = doc.getCalories(),
                     cookingTime = doc.getTimeCooking(),
                     difficulty = doc.getDifficulty(doc.getTimeCooking()),
-                    userId = null,
                     protein = doc.getProtein(),
                     fat = doc.getFat(),
                     carbs = doc.getCarbs(),
@@ -62,6 +59,11 @@ class RecipeScanner(
     }
 
     private fun Document.getTitle() = this.select("h1").text()
+    private fun Document.getDescr() = this.getElementsByAttributeValue("itemprop", "recipeInstructions").map {
+        val text = it.getElementsByAttributeValue("itemprop", "text").text() ?: ""
+        val image = it.select("picture.emotion-0").select("img").attr("src") ?: ""
+        StepRecipe(text,image)
+    }.run { Json.encodeToString(this) }
     private fun Document.getImage() = this.select(".emotion-gxbcya").attr("src")
     private fun Document.getCalories() = this.select(".emotion-1bpeio7").select(".emotion-16si75h")[0].text().toInt()
     private fun Document.getProtein() = this.select(".emotion-1bpeio7").select(".emotion-16si75h")[1].text().toInt()
